@@ -1,0 +1,49 @@
+SQL CODE TO GET LOCATION DATA (COUNTRY, STATE AND PROVINCE)
+
+SELECT
+  salesorderheader.*,
+  province.stateprovincecode AS ship_province,
+  province.CountryRegionCode AS country_code,
+  province.name AS country_state_name,
+  country.Name AS country_name
+FROM
+  `tc-da-1.adwentureworks_db.salesorderheader` AS salesorderheader
+INNER JOIN
+  `tc-da-1.adwentureworks_db.address` AS address
+ON
+  salesorderheader.ShipToAddressID = address.AddressID
+INNER JOIN
+  `tc-da-1.adwentureworks_db.stateprovince` AS province
+ON
+  address.stateprovinceid = province.stateprovinceid
+INNER JOIN
+  `tc-da-1.adwentureworks_db.countryregion` AS country
+ON
+  country.CountryRegionCode = province.CountryRegionCode
+
+SQL CODE TO EXTRACT SALES REASONS
+
+WITH
+  sales_per_reason AS (
+  SELECT
+    DATE_TRUNC(OrderDate, MONTH) AS year_month,
+    sales_reason.SalesReasonID,
+    SUM(sales.TotalDue) AS sales_amount
+  FROM
+    `tc-da-1.adwentureworks_db.salesorderheader` AS sales
+  INNER JOIN
+    `tc-da-1.adwentureworks_db.salesorderheadersalesreason` AS sales_reason
+  ON
+    sales.SalesOrderID = sales_reason.salesOrderID
+  GROUP BY
+    1,
+    2 )
+SELECT
+  sales_per_reason.year_month,
+  reason.Name AS sales_reason,
+  sales_per_reason.sales_amount
+FROM
+  sales_per_reason
+LEFT JOIN
+  `tc-da-1.adwentureworks_db.salesreason` AS reason
+
